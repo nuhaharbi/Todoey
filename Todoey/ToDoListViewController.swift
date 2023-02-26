@@ -24,6 +24,8 @@ class ToDoListViewController: UITableViewController {
         super.viewDidLoad()
         title = "Todoey"
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifire)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
+        navigationItem.rightBarButtonItem?.tintColor = .white
     }
 
     // MARK: - Table view data source
@@ -52,5 +54,26 @@ class ToDoListViewController: UITableViewController {
             cell?.accessoryType = .none
         }
         
+    }
+    
+    //MARK: - Add new item
+    
+    @objc func addButtonPressed(_ sender: Any) {
+        let alert = UIAlertController(title: "Add item", message: "Add new item to the list", preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.placeholder = "Type new item ..."
+        }
+        
+        let cancelActon = UIAlertAction(title: "Cancel", style: .cancel)
+        let addAction = UIAlertAction(title: "Add", style: .default) { _ in
+            if let newItem = alert.textFields?[0].text {
+                self.items.append(newItem)
+                self.tableView.reloadData()
+            }
+        }
+
+        alert.addAction(addAction)
+        alert.addAction(cancelActon)
+        present(alert, animated: true)
     }
 }

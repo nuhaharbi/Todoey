@@ -20,6 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let navigationController = UINavigationController(rootViewController: ToDoListViewController())
         navigationController.navigationBar.backgroundColor = .systemCyan
+        navigationController.navigationBar.barTintColor = .systemCyan
         navigationController.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.white,
             .font: UIFont.preferredFont(forTextStyle: .title2)
