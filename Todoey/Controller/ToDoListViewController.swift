@@ -17,7 +17,7 @@ class ToDoListViewController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    var items = ["Buy Eggas", "Workout", "Buy Flowers"]
+    var items = [Item(title: "Go to mall")]
     let cellIdentifire = "ToDoListCell"
     
     override func viewDidLoad() {
@@ -34,10 +34,10 @@ class ToDoListViewController: UITableViewController {
         return items.count
     }
 
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifire, for: indexPath)
-        cell.textLabel?.text = items[indexPath.row]
+        cell.textLabel?.text = items[indexPath.row].title
+        cell.accessoryType = items[indexPath.row].isChecked ? .checkmark : .none
 
         return cell
     }
@@ -45,15 +45,8 @@ class ToDoListViewController: UITableViewController {
     //MARK: - TableViewDelegate
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        let cell = tableView.cellForRow(at: indexPath)
-        
-        if cell?.accessoryType != .checkmark {
-            cell?.accessoryType = .checkmark
-        } else {
-            cell?.accessoryType = .none
-        }
-        
+        items[indexPath.row].isChecked.toggle()
+        tableView.reloadData()
     }
     
     //MARK: - Add new item
@@ -66,7 +59,8 @@ class ToDoListViewController: UITableViewController {
         
         let cancelActon = UIAlertAction(title: "Cancel", style: .cancel)
         let addAction = UIAlertAction(title: "Add", style: .default) { _ in
-            if let newItem = alert.textFields?[0].text {
+            if let item = alert.textFields?[0].text {
+                let newItem = Item(title: item)
                 self.items.append(newItem)
                 self.tableView.reloadData()
             }
