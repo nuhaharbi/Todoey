@@ -17,6 +17,12 @@ class ToDoListViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var mainCategory: String? {
+        willSet {
+            title = newValue
+        }
+    }
+    
     // VIEWS
     let cellIdentifire = "ToDoListCell"
     var tableView: UITableView = {
@@ -59,7 +65,7 @@ class ToDoListViewController: UIViewController {
         
         searchField.addTarget(self, action: #selector(startSearching), for: .editingChanged)
         
-        title = "Todoey"
+        
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
         navigationItem.rightBarButtonItem?.tintColor = .white
     }
