@@ -6,18 +6,55 @@
 //
 
 import UIKit
+import RealmSwift
+import Realm
 
 class CategoryViewController: UITableViewController {
 
-    var categoryArray = ["Grocery", "Shopping", "Homework"]
+    //MARK: - Vars
+    
+    let cellIdentifire = "categoryCell"
+    var categoryArray : Results<ToDoCategory>?
+    var realm = try! Realm()
+    
+    //MARK: - App life cycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        fetchCategories()
+        setUpView()
+    }
+    
+    //MARK: - setup view
+    
+    func setUpView() {
         view.backgroundColor = .white
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "categoryCell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellIdentifire)
         title = "Todoey"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
         navigationItem.rightBarButtonItem?.tintColor = .white
+    }
+    
+    //MARK: - Database opreations
+    
+    func fetchCategories() {
+        categoryArray = realm.objects(ToDoCategory.self)
+        self.tableView.reloadData()
+    }
+    
+    func saveCategories(_ categoryTitle: String) {
+        let category = ToDoCategory(title: categoryTitle)
+        
+        do {
+            try self.realm.write {
+                self.realm.add(category)
+            }
+        } catch {
+            print("Unable to save category")
+        }
+
+        self.tableView.reloadData()
     }
     
     //MARK: - Add new item
@@ -30,9 +67,9 @@ class CategoryViewController: UITableViewController {
         
         let cancelActon = UIAlertAction(title: "Cancel", style: .cancel)
         let addAction = UIAlertAction(title: "Add", style: .default) { _ in
-            if let category = alert.textFields?[0].text {
-                self.categoryArray.append(category)
-                self.tableView.reloadData()
+            if let categoryTitle = alert.textFields?[0].text {
+                
+                self.saveCategories(categoryTitle)
             }
         }
 
@@ -44,23 +81,28 @@ class CategoryViewController: UITableViewController {
     // MARK: - Table view data source
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1
     }
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-        cell.textLabel?.text = categoryArray[indexPath.row]
-
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifire, for: indexPath)
+        
+        if let category = categoryArray?[indexPath.row] {
+            cell.textLabel?.text = category.title
+        } else {
+            cell.textLabel?.text = "No  category added"
+        }
+    
         return cell
     }
     
+    //MARK: - Table view delegate
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let destenationVC = ToDoListViewController()
-        destenationVC.mainCategory = categoryArray[indexPath.row]
-        navigationController?.pushViewController(destenationVC , animated: true)
+        let itemsVC = ToDoListViewController()
+        itemsVC.mainCategory = categoryArray?[indexPath.row]
+        navigationController?.pushViewController(itemsVC , animated: true)
     }
-
 }

@@ -6,25 +6,12 @@
 //
 
 import UIKit
+import RealmSwift
 
 class ToDoListViewController: UIViewController {
+
+    //MARK: - UIViews
     
-    init(){
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    var mainCategory: String? {
-        willSet {
-            title = newValue
-        }
-    }
-    
-    // VIEWS
-    let cellIdentifire = "ToDoListCell"
     var tableView: UITableView = {
         let tv = UITableView(frame: .zero)
         tv.register(UITableViewCell.self, forCellReuseIdentifier: "ToDoListCell")
@@ -40,12 +27,29 @@ class ToDoListViewController: UIViewController {
         return tf
     }()
     
-    var items = [Item(title: "Go to mall")]
-    var filteredItems = [Item]()
+    //MARK: - Vars
+    
+    let cellIdentifire = "ToDoListCell"
+    let realm = try! Realm()
+    var items : Results<ToDoItem>?
+    var mainCategory: ToDoCategory? {
+        didSet {
+            fetchItems()
+            title = mainCategory?.title
+        }
+    }
+    
+    //MARK: - App lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setUpView()
 
+    }
+    
+    //MARK: - Setup view
+    
+    func setUpView() {
         view.addSubview(tableView)
         view.addSubview(searchField)
         view.backgroundColor = .white
@@ -65,23 +69,49 @@ class ToDoListViewController: UIViewController {
         
         searchField.addTarget(self, action: #selector(startSearching), for: .editingChanged)
         
-        
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
         navigationItem.rightBarButtonItem?.tintColor = .white
     }
 
+    //MARK: - Search textfield
+    
     @objc func startSearching(_ sender: UITextField) {
-        
-        filteredItems.removeAll()
+        fetchItems()
         if sender.text != "" {
-            filteredItems = items.filter({ item in
-                item.title.lowercased().contains((sender.text?.lowercased())!)
-            })
-            items = filteredItems
-        } else {
-            // here we need to fetch the items from the database
-            items.append(Item(title: "Go to mall"))
+            items = items?.filter("title CONTAINS[c] %@", sender.text!).sorted(byKeyPath: "dateCrated", ascending: true)
         }
+        tableView.reloadData()
+    }
+    
+    //MARK: - Database opreations
+    
+    func saveItems(_ newItem: ToDoItem) {
+        do{
+            try self.realm.write {
+                self.mainCategory?.items.append(newItem)
+            }
+        } catch {
+            print("Unable to save item")
+        }
+        
+        self.tableView.reloadData()
+    }
+    
+    func updateItems(_ selectedItem: ToDoItem) {
+        do {
+            try realm.write {
+                selectedItem.isChecked.toggle()
+            }
+        } catch {
+            print("Unable to update item")
+        }
+        
+        tableView.reloadData()
+    }
+
+    
+    func fetchItems() {
+        items = mainCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     
@@ -96,9 +126,9 @@ class ToDoListViewController: UIViewController {
         let cancelActon = UIAlertAction(title: "Cancel", style: .cancel)
         let addAction = UIAlertAction(title: "Add", style: .default) { _ in
             if let item = alert.textFields?[0].text {
-                let newItem = Item(title: item)
-                self.items.append(newItem)
-                self.tableView.reloadData()
+                let newItem = ToDoItem(title: item, isChecked: false)
+                
+                self.saveItems(newItem)
             }
         }
 
@@ -108,15 +138,15 @@ class ToDoListViewController: UIViewController {
     }
 }
 
-//MARK: - TableViewDelegate
+//MARK: - Table View Delegate
 
 extension ToDoListViewController : UITableViewDelegate {
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        items[indexPath.row].isChecked.toggle()
-        tableView.reloadData()
-    }
     
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let selectedItem = items?[indexPath.row] {
+            updateItems(selectedItem)
+        }
+    }
 }
 
 // MARK: - Table view data source
@@ -124,13 +154,18 @@ extension ToDoListViewController : UITableViewDelegate {
 extension ToDoListViewController : UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+        return items?.count ?? 1
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifire, for: indexPath)
-        cell.textLabel?.text = items[indexPath.row].title
-        cell.accessoryType = items[indexPath.row].isChecked ? .checkmark : .none
+        
+        if let item = items?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.isChecked ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No items added to the list"
+        }
 
         return cell
     }
