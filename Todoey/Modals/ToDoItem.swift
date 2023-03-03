@@ -8,11 +8,10 @@
 import Foundation
 import RealmSwift
 
-class ToDoItem: Object {
-    @Persisted(primaryKey: true) var _id: ObjectId
+class ToDoItem: EmbeddedObject {
     @Persisted var title: String = ""
     @Persisted var isChecked: Bool = false
-    @Persisted var dateCrated: Date = Date()
+    @Persisted var dateCreated: Date = Date()
     
     @Persisted(originProperty: "items") var assignee: LinkingObjects<ToDoCategory>
     

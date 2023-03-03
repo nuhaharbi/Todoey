@@ -21,12 +21,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let navigationController = UINavigationController(rootViewController: CategoryViewController())
         navigationController.navigationBar.backgroundColor = .systemCyan
         navigationController.navigationBar.barTintColor = .systemCyan
+        navigationController.navigationBar.tintColor = .white
+        navigationController.navigationBar.largeTitleTextAttributes = [
+            .foregroundColor: UIColor.white,
+        ]
         navigationController.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor.white,
-            .font: UIFont.preferredFont(forTextStyle: .title2)
         ]
-        
+        navigationController.navigationBar.prefersLargeTitles = true
         window = UIWindow(windowScene: scene)
+        
         window?.makeKeyAndVisible()
         window?.rootViewController = navigationController
     }
