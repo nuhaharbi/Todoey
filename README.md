@@ -1,4 +1,4 @@
-# Todoey
+# Todoey 📝
 Angela Yu's iOS Development Bootcamp module. A to do list app
 
 ## Project Features
